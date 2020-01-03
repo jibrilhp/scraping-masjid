@@ -1,9 +1,11 @@
+from bs4 import BeautifulSoup
+from logEvent import sendLogMessage
 import urllib
 import urllib.request
-from bs4 import BeautifulSoup
 import time
 import requests
 import ssl
+import random
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -13,6 +15,7 @@ def make_soup(url):
     return soupdata
 
 def save_to_server(list_data):
+    print(list_data)
     if len(list_data) > 1:
         params_data = {'id_masjid':list_data[4],
             'kabupaten_kota':list_data[1],
@@ -42,21 +45,33 @@ def save_to_server(list_data):
 
     return r.text
 
-for x in range(0,0,10):
-    
-    if (x == 0):
-        
-        soup = make_soup('https://simas.kemenag.go.id/index.php/profil/masjid/?tipologi_id=1')
-    else:
-        soup = make_soup('https://simas.kemenag.go.id/index.php/profil/masjid/page/' + str(x) + '?tipologi_id=2')
 
-    for record in soup.findAll('tbody'):
-        for data in record.findAll('tr'):
-            masjid_data = []
-            for data2 in data.findAll('td'):
-                masjid_data.append(data2.text)
-            sr = save_to_server(masjid_data)
-            if "400" in sr:
-                print(sr,str(x))
-    
+for x in range(50000,212240,10):
+    #70743
+    try:
+        print(x)
+        if (x == 0):
+            
+            soup = make_soup('http://simas.kemenag.go.id/index.php/profil/masjid/?tipologi_id=5')
+        else:
+            soup = make_soup('http://simas.kemenag.go.id/index.php/profil/masjid/page/' + str(x) + '?tipologi_id=5')
+        
+        
+
+        for record in soup.findAll('tbody'):
+            for data in record.findAll('tr'):
+                masjid_data = []
+                for data2 in data.findAll('td'):
+                    masjid_data.append(data2.text)
+
+                sr = save_to_server(masjid_data)
+                
+                if "400" in sr:
+                    raise Exception("Duplicate on " + str(x))
+
+    except Exception as e:
+        print("Meong, " + str(x) + " --> " + str(e))
+        sendLogMessage("Error, " + str(x) + " --> " + str(e))
+        pass
+
     
